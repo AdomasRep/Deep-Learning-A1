@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from FN.utils.transform_dataset import transform_dataset,transform_dataset_credit,transform_dataset_census
 
 def transform(dataset, df, valid):
+    """
+    given an original dataframe (COMPAS, Credit, or Census) function applies preprocessing used in the original paper.
+    selects only numerical columns and returns them.
+    """
 
     if valid:
         df = list(df.values())[0]
@@ -37,6 +41,10 @@ def transform(dataset, df, valid):
     return df_cont
 
 def get_stats(dataset, df_cont, valid, part):
+    """
+    Given the dataframe returned by transform function. Function calculates mean and standard deviations of each column
+    and returns this information in the form of dataframe.
+    """
 
     df_fin = df_cont.mean().to_frame().reset_index()
 
@@ -55,7 +63,10 @@ def get_stats(dataset, df_cont, valid, part):
     return df_fin
 
 def preprocessing_function_original(df,dataset,stats):
-
+    """
+    Function is used to obtain statistics (mean and std) of datasets preprocessed in the original way.
+    Original way in this case means that dataset was first preprocessed and only then split into train, test, and valid.
+    """
     df_cont = transform(dataset, df, False)
     split = [int(0.7*len(df_cont)), int(0.8 * len(df_cont))]  # Train, validation, test
     train_dataset, val_dataset, test_dataset = np.split(df_cont.sample(frac=1, random_state=1), split)
@@ -66,7 +77,11 @@ def preprocessing_function_original(df,dataset,stats):
 
     return stats
 
-def preprocessing_function_correct(df,dataset, stats) -> pd.DataFrame:
+def preprocessing_function_correct(df,dataset, stats):
+    """
+    Function is used to obtain statistics (mean and std) of datasets preprocessed in the correct way.
+    Correct way in this case means that dataset was split into train, test, and valid and then preprocessed.
+    """
 
     split = [int(0.7*len(df)), int(0.8 * len(df))]  # Train, validation, test
     train_dataset, val_dataset, test_dataset = np.split(df.sample(frac=1, random_state=1), split)
@@ -81,15 +96,29 @@ def preprocessing_function_correct(df,dataset, stats) -> pd.DataFrame:
     return stats
 
 def plot(statistic, df):
+    """
+    After statistics for all the datasets are obtained, this function is used to plot the results.
+    :param statistic: in this case it can be mean and std. If mean is passed standard deviation in means is calculated.
+    If std is passed standard deviation in standard deviations of continuous columns is calculated.
+    """
 
     plt.plot(df[df['proper'] == False]['column'], df[df['proper'] == False][statistic], label = 'Original Preprocessing')
     plt.plot(df[df['proper'] == True]['column'], df[df['proper'] == True][statistic], label = 'Right Preprocessing')
 
+    if statistic == 'std':
+        statistic = 'Standard Deviations'
+
+    else:
+        statistic = 'Means'
+
     plt.xticks(rotation=45)
-    plt.title(f'Standard Deviation of {statistic} mean column values')
+    plt.title(f'Standard Deviation in {statistic} of Continuous Columns', size = 16, weight = 'bold')
+    plt.ylabel('Standard Deviation', size = 12, weight = 'bold')
+    plt.xlabel('Column Names', size = 12, weight = 'bold')
     plt.legend()
 
-    plt.show
+    plt.tight_layout()
+    plt.show()
 
 def run(dataset,inputpath,stats):
 
@@ -116,5 +145,3 @@ if __name__ == '__main__':
 
     plot('mean', df)
     plot('std', df)
-
-    print('Here it comes')
